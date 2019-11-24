@@ -13,14 +13,14 @@ from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import Callback
-
+from bert4keras.utils import SpTokenizer
 set_gelu('tanh') # 切换gelu版本
 
 
-maxlen = 128
-config_path = '/root/kg/bert/albert_small_zh_google/albert_config.json'
-checkpoint_path = '/root/kg/bert/albert_small_zh_google/albert_model.ckpt'
-dict_path = '/root/kg/bert/albert_small_zh_google/vocab.txt'
+#maxlen = 128
+config_path = 'models/albert_base/albert_config.json'
+checkpoint_path = 'models/albert_base/variables/variables'
+spm_path = 'models/albert_base/assets/30k-clean.model'
 
 
 def load_data(filename):
@@ -33,13 +33,13 @@ def load_data(filename):
 
 
 # 加载数据集
-train_data = load_data('datasets/sentiment/sentiment.train.data')
-valid_data = load_data('datasets/sentiment/sentiment.valid.data')
-test_data = load_data('datasets/sentiment/sentiment.test.data')
+train_data = load_data('datasets/IMDB_trainshuffle.data')
+valid_data = load_data('datasets/IMDB_valshuffle.data')
+test_data = load_data('datasets/IMDB_testshuffle.data')
 
 # 建立分词器
-tokenizer = Tokenizer(dict_path)
-
+tokenizer = SpTokenizer(spm_path)
+albert = build_bert_model(config_path, checkpoint_path, albert=True)
 
 class data_generator:
     """数据生成器
@@ -76,6 +76,7 @@ class data_generator:
 
 
 # 加载预训练模型
+'''
 bert = build_bert_model(
     config_path=config_path,
     checkpoint_path=checkpoint_path,
@@ -83,13 +84,13 @@ bert = build_bert_model(
     albert=True,
     return_keras_model=False,
 )
-
+'''
 output = Dropout(rate=0.1)(bert.model.output)
 output = Dense(units=2,
                activation='softmax',
                kernel_initializer=bert.initializer)(output)
 
-model = Model(bert.model.input, output)
+model = Model(albert.model.input, output)
 model.summary()
 
 model.compile(
