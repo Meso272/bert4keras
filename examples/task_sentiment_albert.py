@@ -19,7 +19,7 @@ from keras.utils import to_categorical
 set_gelu('tanh') # 切换gelu版本
 
 
-maxlen = 256
+maxlen = 128
 config_path = 'models/albert_base/albert_config.json'
 checkpoint_path = 'models/albert_base/variables/variables'
 spm_path = 'models/albert_base/assets/30k-clean.model'
