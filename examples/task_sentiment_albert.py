@@ -85,12 +85,12 @@ bert = build_bert_model(
     return_keras_model=False,
 )
 '''
-output = Dropout(rate=0.1)(albert.model.output)
+output = Dropout(rate=0.1)(albert.output)
 output = Dense(units=2,
                activation='softmax',
                kernel_initializer=albert.initializer)(output)
 
-model = Model(albert.model.input, output)
+model = Model(albert.input, output)
 model.summary()
 
 model.compile(
