@@ -13,7 +13,7 @@ from keras.layers import *
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import Callback
-from bert4keras.tokenzier import SpTokenizer
+from bert4keras.tokenizer import SpTokenizer
 set_gelu('tanh') # 切换gelu版本
 
 
