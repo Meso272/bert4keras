@@ -41,7 +41,7 @@ test_data = load_data('datasets/IMDB_testshuffle.data')
 
 # 建立分词器
 tokenizer = SpTokenizer(spm_path)
-albert = build_bert_model(config_path, checkpoint_path, albert=True,return_keras_model=False)
+albert = build_bert_model(config_path, checkpoint_path, with_pool=True,albert=True,return_keras_model=False)
 
 class data_generator:
     """数据生成器
