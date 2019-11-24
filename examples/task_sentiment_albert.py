@@ -39,7 +39,7 @@ test_data = load_data('datasets/IMDB_testshuffle.data')
 
 # 建立分词器
 tokenizer = SpTokenizer(spm_path)
-albert = build_bert_model(config_path, checkpoint_path, albert=True)
+albert = build_bert_model(config_path, checkpoint_path, albert=True,return_keras_model=False)
 
 class data_generator:
     """数据生成器
@@ -85,12 +85,12 @@ bert = build_bert_model(
     return_keras_model=False,
 )
 '''
-output = Dropout(rate=0.1)(albert.output)
+output = Dropout(rate=0.1)(albert.model.output)
 output = Dense(units=2,
                activation='softmax',
                kernel_initializer=albert.initializer)(output)
 
-model = Model(albert.input, output)
+model = Model(albert.model.input, output)
 model.summary()
 
 model.compile(
