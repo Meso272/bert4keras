@@ -137,7 +137,7 @@ class Evaluator(Callback):
 evaluator = Evaluator()
 model.fit_generator(train_generator.forfit(),
                     steps_per_epoch=len(train_generator),
-                    epochs=10,
+                    epochs=15,
                     callbacks=[evaluator])
 
 model.load_weights('best_model.weights')
