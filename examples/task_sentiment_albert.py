@@ -89,7 +89,7 @@ bert = build_bert_model(
 )
 '''
 output = Dropout(rate=0.1)(albert.model.output)
-output=Flatten(batch_input_shape=(768,))(output)
+output=Flatten(shape=(768,))(output)
 output = Dense(units=2,
                activation='softmax',
                kernel_initializer=albert.initializer)(output)
