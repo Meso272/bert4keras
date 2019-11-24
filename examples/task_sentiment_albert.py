@@ -10,7 +10,7 @@ from bert4keras.bert import build_bert_model
 from bert4keras.train import PiecewiseLinearLearningRate
 from bert4keras.snippets import sequence_padding
 from keras.layers import *
-from keras.models import Model上
+from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import Callback
 from bert4keras.tokenzier import SpTokenizer
