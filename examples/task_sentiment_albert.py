@@ -17,7 +17,7 @@ from bert4keras.tokenizer import SpTokenizer
 set_gelu('tanh') # 切换gelu版本
 
 
-#maxlen = 128
+maxlen = 256
 config_path = 'models/albert_base/albert_config.json'
 checkpoint_path = 'models/albert_base/variables/variables'
 spm_path = 'models/albert_base/assets/30k-clean.model'
