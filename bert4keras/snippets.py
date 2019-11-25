@@ -4,6 +4,7 @@
 import six
 import logging
 import numpy as np
+import re
 
 
 if not six.PY2:
@@ -14,6 +15,31 @@ def is_string(s):
     """判断是否是字符串
     """
     return isinstance(s, basestring)
+
+
+def strQ2B(ustring):
+    """全角符号转对应的半角符号
+    """
+    rstring = ''
+    for uchar in ustring:
+        inside_code = ord(uchar)
+        # 全角空格直接转换
+        if inside_code == 12288:
+            inside_code = 32
+        # 全角字符（除空格）根据关系转化
+        elif (inside_code >= 65281 and inside_code <= 65374):
+            inside_code -= 65248
+        rstring += unichr(inside_code)
+    return rstring
+
+
+def string_matching(s, keywords):
+    """判断s是否至少包含keywords中的至少一个字符串
+    """
+    for k in keywords:
+        if re.search(k, s):
+            return True
+    return False
 
 
 class Progress:
@@ -117,7 +143,7 @@ def get_all_attributes(something):
     """
     return {
         name: getattr(something, name)
-        for name in dir(something) if name[:2] != '__' and name[-2:] != '__'
+        for name in dir(something) if name[0] != '_'
     }
 
 

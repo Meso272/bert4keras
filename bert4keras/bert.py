@@ -26,6 +26,7 @@ class BertModel(object):
             dropout_rate,  # Dropout比例
             initializer_range=None,  # 权重初始化方差
             embedding_size=None,  # 是否指定embedding_size
+            num_feed_forward_groups=1,  # Feed Forward部分是否使用分组Dense
             with_pool=False,  # 是否包含Pool部分
             with_nsp=False,  # 是否包含NSP部分
             with_mlm=False,  # 是否包含MLM部分
@@ -43,14 +44,9 @@ class BertModel(object):
         self.attention_head_size = hidden_size // num_attention_heads
         self.intermediate_size = intermediate_size
         self.dropout_rate = dropout_rate
-        if initializer_range:
-            self.initializer_range = initializer_range
-        else:
-            self.initializer_range = 0.02
-        if embedding_size:
-            self.embedding_size = embedding_size
-        else:
-            self.embedding_size = hidden_size
+        self.initializer_range = initializer_range or 0.02
+        self.embedding_size = embedding_size or hidden_size
+        self.num_feed_forward_groups = num_feed_forward_groups
         self.with_pool = with_pool
         self.with_nsp = with_nsp
         self.with_mlm = with_mlm
@@ -136,6 +132,7 @@ class BertModel(object):
                       name='MLM-Dense')(x)
             x = LayerNormalization(name='MLM-Norm')(x)
             x = EmbeddingDense(embedding_name='Embedding-Token',
+                               activation=self.with_mlm,
                                name='MLM-Proba')(x)
             outputs.append(x)
 
@@ -171,6 +168,7 @@ class BertModel(object):
                 Add(name='%s-Add' % attention_name),
                 LayerNormalization(name='%s-Norm' % attention_name),
                 FeedForward(units=self.intermediate_size,
+                            groups=self.num_feed_forward_groups,
                             activation=self.hidden_act,
                             kernel_initializer=self.initializer,
                             name=feed_forward_name),
@@ -299,7 +297,7 @@ class BertModel(object):
 
         return mapping
 
-    def load_weights_from_checkpoint(self, checkpoint_file):
+    def load_weights_from_checkpoint(self, checkpoint_file, mapping=None):
         """从预训练好的Bert的checkpoint中加载权重
         为了简化写法，对变量名的匹配引入了一定的模糊匹配能力。
         """
@@ -307,7 +305,8 @@ class BertModel(object):
             n[0] for n in tf.train.list_variables(checkpoint_file)
             if 'adam' not in n[0]
         ]
-        mapping = self.variable_mapping(variable_names)
+        if mapping is None:
+            mapping = self.variable_mapping(variable_names)
 
         def similarity(a, b, n=4):
             # 基于n-grams的jaccard相似度
@@ -348,7 +347,7 @@ class BertModel(object):
             weights = load_variables(layer_variable_names)
             self.model.get_layer(layer_name).set_weights(weights)
 
-    def save_weights_as_checkpoint(self, filename, reference):
+    def save_weights_as_checkpoint(self, filename, reference, mapping=None):
         """保存模型的权重，跟Bert的checkpoint格式一致
         filename: 要保存的名字；
         reference: 参照的已有的checkpoint。
@@ -357,9 +356,10 @@ class BertModel(object):
             n[0] for n in tf.train.list_variables(reference)
             if 'adam' not in n[0]
         ]
-        mapping = self.variable_mapping(variable_names)
-        weights = {}
+        if mapping is None:
+            mapping = self.variable_mapping(variable_names)
 
+        weights = {}
         for layer_name, layer_variable_names in mapping.items():
             layer_weights = self.model.get_layer(layer_name).get_weights()
             for n, w in zip(layer_variable_names, layer_weights):
@@ -395,21 +395,19 @@ class Bert4Seq2seq(BertModel):
         """
         if self.attention_mask is None:
 
-            def seq2seq_attention_mask(s, repeats=1):
+            def seq2seq_attention_mask(s):
                 import tensorflow as tf
                 seq_len = K.shape(s)[1]
                 with K.name_scope('attention_mask'):
-                    ones = K.ones((1, repeats, seq_len, seq_len))
+                    ones = K.ones((1, 1, seq_len, seq_len))
                 a_mask = tf.linalg.band_part(ones, -1, 0)
                 s_ex12 = K.expand_dims(K.expand_dims(s, 1), 2)
                 s_ex13 = K.expand_dims(K.expand_dims(s, 1), 3)
                 a_mask = (1 - s_ex13) * (1 - s_ex12) + s_ex13 * a_mask
-                a_mask = K.reshape(a_mask, (-1, seq_len, seq_len))
                 return a_mask
 
             self.attention_mask = Lambda(
                 seq2seq_attention_mask,
-                arguments={'repeats': self.num_attention_heads},
                 name='Attention-Mask')(segment_ids)
 
         return self.attention_mask
@@ -460,6 +458,7 @@ def build_bert_model(config_path,
                 dropout_rate=config['hidden_dropout_prob'],
                 initializer_range=config.get('initializer_range'),
                 embedding_size=config.get('embedding_size'),
+                num_feed_forward_groups=config.get('num_feed_forward_groups'),
                 with_pool=with_pool,
                 with_nsp=with_nsp,
                 with_mlm=with_mlm,
