@@ -46,7 +46,7 @@ albert = build_bert_model(config_path, checkpoint_path, with_pool=True,albert=Tr
 class data_generator:
     """数据生成器
     """
-    def __init__(self, data, batch_size=128):
+    def __init__(self, data, batch_size=64):
         self.data = data
         self.batch_size = batch_size
         self.steps = len(self.data) // self.batch_size
