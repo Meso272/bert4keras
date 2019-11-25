@@ -65,9 +65,9 @@ class data_generator:
             batch_token_ids.append(token_ids)
             batch_segment_ids.append(segment_ids)
             batch_labels.append([label])
-            #print(token_ids)
-            #print(segment_ids)
-            #print(label)
+            print(token_ids)
+            print(segment_ids)
+            print(label)
             if len(batch_token_ids) == self.batch_size or i == idxs[-1]:
                 batch_token_ids = sequence_padding(batch_token_ids)
                 batch_segment_ids = sequence_padding(batch_segment_ids)
